@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var SHELL_CACHE = 'typing-master-v11';
+  var SHELL_CACHE = 'typing-master-v13';
   var RUNTIME_CACHE = 'typing-master-runtime-v1';
 
   var PRECACHE_ASSETS = [
@@ -21,6 +21,7 @@
     './js/components/dashboard-modal.js',
     './js/modes/position-mode.js',
     './js/modes/text-practice-mode.js',
+    './js/modes/dictation-mode.js',
     './js/modes/acid-rain-mode.js',
     './js/app.js',
     './icons/icon.svg',

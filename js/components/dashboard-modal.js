@@ -8,6 +8,7 @@
     { id: 'word', label: '낱말 연습' },
     { id: 'short', label: '단문장 연습' },
     { id: 'long', label: '장문장 연습' },
+    { id: 'dictation', label: '받아쓰기' },
   ];
 
   function escapeHtml(str) {

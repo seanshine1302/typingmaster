@@ -41,8 +41,17 @@
       descEn: 'Type multi-line essays and stories to strengthen endurance and steady speed.',
     },
     {
-      id: 'acid',
+      id: 'dictation',
       num: '05',
+      title: '받아쓰기',
+      badge: '듣고 받아적기',
+      accent: 'mint',
+      descKo: '음성으로 불러주는 문장을 듣고 띄어쓰기와 마침표·문장부호까지 정확히 받아 적습니다.',
+      descEn: 'Listen to spoken sentences and type them accurately with proper spacing and punctuation.',
+    },
+    {
+      id: 'acid',
+      num: '06',
       title: '산성비 미니게임',
       badge: '1~10단계 도전',
       accent: 'coral',
@@ -381,6 +390,8 @@
       this.activeController = new TypingApp.PositionMode(this.mainEl, this);
     } else if (targetMode === 'word' || targetMode === 'short' || targetMode === 'long') {
       this.activeController = new TypingApp.TextPracticeMode(this.mainEl, this, targetMode);
+    } else if (targetMode === 'dictation') {
+      this.activeController = new TypingApp.DictationMode(this.mainEl, this);
     } else if (targetMode === 'acid') {
       this.activeController = new TypingApp.AcidRainMode(this.mainEl, this);
     } else {

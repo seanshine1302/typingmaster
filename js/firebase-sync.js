@@ -20,6 +20,7 @@ const firebaseConfig = {
 };
 
 const COLLECTION_NAME = 'typing_users';
+const DICTATION_COLLECTION = 'dictation_sets';
 
 function cleanForFirestore(userObj) {
   return JSON.parse(JSON.stringify(userObj));
@@ -32,6 +33,7 @@ function initFirebaseBridge() {
     const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const usersCol = collection(db, COLLECTION_NAME);
+    const dictationCol = collection(db, DICTATION_COLLECTION);
 
     const bridge = {
       ready: true,
@@ -99,6 +101,49 @@ function initFirebaseBridge() {
           }
         );
       },
+
+      async fetchDictationSets() {
+        const snapshot = await getDocs(dictationCol);
+        const list = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data() || {};
+          list.push({ ...data, id: data.id || docSnap.id });
+        });
+        return list;
+      },
+
+      async upsertDictationSet(setObj) {
+        if (!setObj || !setObj.id) return;
+        const ref = doc(db, DICTATION_COLLECTION, String(setObj.id));
+        await setDoc(ref, cleanForFirestore(setObj));
+      },
+
+      async deleteDictationSet(setId) {
+        if (!setId) return;
+        const ref = doc(db, DICTATION_COLLECTION, String(setId));
+        await deleteDoc(ref);
+      },
+
+      subscribeDictationSets(onUpdate, onError) {
+        return onSnapshot(
+          dictationCol,
+          (snapshot) => {
+            const list = [];
+            snapshot.forEach((docSnap) => {
+              const data = docSnap.data() || {};
+              list.push({ ...data, id: data.id || docSnap.id });
+            });
+            if (typeof onUpdate === 'function') {
+              onUpdate(list, snapshot.metadata);
+            }
+          },
+          (err) => {
+            if (typeof onError === 'function') {
+              onError(err);
+            }
+          }
+        );
+      },
     };
 
     TypingApp.FirebaseBridge = bridge;
@@ -106,6 +151,8 @@ function initFirebaseBridge() {
     if (TypingApp.ProfileStore && typeof TypingApp.ProfileStore.attachRemoteBridge === 'function') {
       TypingApp.ProfileStore.attachRemoteBridge(bridge);
     }
+
+    window.dispatchEvent(new CustomEvent('typingapp:firebase-ready', { detail: bridge }));
   } catch (err) {
     console.warn('[FirebaseSync] Firestore 초기화에 실패하여 로컬 캐시 모드로 동작합니다.', err);
   }

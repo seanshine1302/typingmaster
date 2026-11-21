@@ -8,6 +8,7 @@
     { id: 'word', label: '낱말 연습', badgeClass: 'mint' },
     { id: 'short', label: '단문장 연습', badgeClass: 'sky' },
     { id: 'long', label: '장문장 연습', badgeClass: 'indigo' },
+    { id: 'dictation', label: '받아쓰기', badgeClass: 'mint' },
   ];
 
   function escapeHtml(str) {
@@ -27,14 +28,6 @@
     var hh = String(d.getHours()).padStart(2, '0');
     var min = String(d.getMinutes()).padStart(2, '0');
     return mm + '/' + dd + ' ' + hh + ':' + min;
-  }
-
-  function formatDateStamp() {
-    var d = new Date();
-    var yyyy = d.getFullYear();
-    var mm = String(d.getMonth() + 1).padStart(2, '0');
-    var dd = String(d.getDate()).padStart(2, '0');
-    return yyyy + mm + dd;
   }
 
   function ProfileModal(overlayEl, options) {
@@ -129,13 +122,13 @@
       '        <span class="grade-badge grade-badge--xs grade-tier-' + activeGrade.tier + '">' + escapeHtml(activeGrade.label) + '</span>' +
       '      </span>' +
       '      <h2 class="profile-modal-title" id="profile-modal-title">' +
-      (self.activeTab === 'profiles' ? '사용자 관리 및 백업' : '내 연습 기록') +
+      (self.activeTab === 'profiles' ? '사용자 관리' : '내 연습 기록') +
       '      </h2>' +
       '    </div>' +
       '    <button type="button" class="modal-close-btn" id="profile-close-btn" aria-label="창 닫기">✕</button>' +
       '  </div>' +
       '  <div class="profile-tabs" role="tablist">' +
-      '    <button type="button" role="tab" class="profile-tab-btn' + (self.activeTab === 'profiles' ? ' is-active' : '') + '" data-tab="profiles" aria-selected="' + (self.activeTab === 'profiles') + '">사용자 · 백업/복원</button>' +
+      '    <button type="button" role="tab" class="profile-tab-btn' + (self.activeTab === 'profiles' ? ' is-active' : '') + '" data-tab="profiles" aria-selected="' + (self.activeTab === 'profiles') + '">사용자 목록</button>' +
       '    <button type="button" role="tab" class="profile-tab-btn' + (self.activeTab === 'records' ? ' is-active' : '') + '" data-tab="records" aria-selected="' + (self.activeTab === 'records') + '">내 기록 대시보드</button>' +
       '  </div>' +
       '  <div class="profile-modal-body">' +
@@ -201,17 +194,6 @@
       '    <button type="submit" class="btn btn-primary">추가</button>' +
       '  </form>' +
       (this.errorMsg ? '<p class="form-error-msg" id="profile-add-error">' + escapeHtml(this.errorMsg) + '</p>' : '') +
-      '</div>' +
-      '<div class="profile-section profile-backup-section">' +
-      '  <div class="section-heading-row">' +
-      '    <h3 class="section-heading">전체 기록 백업 및 복원</h3>' +
-      '    <span class="section-hint">PC와 태블릿·스마트폰 간에 전체 사용자와 기록을 JSON 파일로 옮길 수 있습니다.</span>' +
-      '  </div>' +
-      '  <div class="backup-actions-row">' +
-      '    <button type="button" class="btn btn-secondary" id="profile-export-btn">백업 (JSON 내보내기)</button>' +
-      '    <button type="button" class="btn btn-ghost" id="profile-import-btn">복원 (JSON 가져오기)</button>' +
-      '    <input type="file" id="profile-import-file" accept=".json,application/json" class="hidden" />' +
-      '  </div>' +
       '</div>'
     );
   };
@@ -418,58 +400,6 @@
             var refocused = self.overlayEl.querySelector('#profile-add-input');
             if (refocused) refocused.focus();
           }
-        });
-      }
-
-      var exportBtn = self.overlayEl.querySelector('#profile-export-btn');
-      if (exportBtn) {
-        exportBtn.addEventListener('click', function () {
-          var jsonText = store.exportAllData();
-          var blob = new Blob([jsonText], { type: 'application/json;charset=utf-8' });
-          var url = URL.createObjectURL(blob);
-          var a = document.createElement('a');
-          a.href = url;
-          a.download = 'sunshine-typing-backup-' + formatDateStamp() + '.json';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(function () {
-            URL.revokeObjectURL(url);
-          }, 1000);
-          self._notifyToast('전체 사용자 기록을 JSON 파일로 백업했습니다.');
-        });
-      }
-
-      var importBtn = self.overlayEl.querySelector('#profile-import-btn');
-      var importFile = self.overlayEl.querySelector('#profile-import-file');
-      if (importBtn && importFile) {
-        importBtn.addEventListener('click', function () {
-          importFile.value = '';
-          importFile.click();
-        });
-        importFile.addEventListener('change', function () {
-          var file = importFile.files && importFile.files[0];
-          if (!file) return;
-          var reader = new FileReader();
-          reader.onload = function () {
-            var res = store.importAllData(String(reader.result || ''));
-            if (res.ok) {
-              self.errorMsg = '';
-              self.confirmDeleteId = null;
-              self._notifyProfileChanged(res.activeUser, 'import');
-              self._notifyToast('복원 완료: ' + res.userCount + '명의 사용자 기록을 불러왔습니다.');
-              self.render();
-            } else {
-              self.errorMsg = res.error || '복원에 실패했습니다.';
-              self._notifyToast(self.errorMsg);
-              self.render();
-            }
-          };
-          reader.onerror = function () {
-            self.errorMsg = '파일을 읽는 중 오류가 발생했습니다.';
-            self.render();
-          };
-          reader.readAsText(file, 'utf-8');
         });
       }
     }

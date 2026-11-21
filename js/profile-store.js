@@ -5,7 +5,7 @@
 
   var STORAGE_KEY = 'typingmaster_profiles_v1';
   var ACTIVE_USER_KEY = 'typingmaster_active_user_id_v1';
-  var PRACTICE_MODES = ['position', 'word', 'short', 'long'];
+  var PRACTICE_MODES = ['position', 'word', 'short', 'long', 'dictation'];
   var MAX_HISTORY = 50;
 
   var GRADE_TIERS = [
@@ -121,6 +121,7 @@
         word: emptyModeStats(),
         short: emptyModeStats(),
         long: emptyModeStats(),
+        dictation: emptyModeStats(),
       },
       acidRain: {
         ko: emptyAcidStats(),
@@ -151,6 +152,7 @@
       word: normalizeModeStats(practiceRaw.word),
       short: normalizeModeStats(practiceRaw.short),
       long: normalizeModeStats(practiceRaw.long),
+      dictation: normalizeModeStats(practiceRaw.dictation),
     };
 
     var speedRaw = raw.bestSpeed && typeof raw.bestSpeed === 'object' ? raw.bestSpeed : {};
