@@ -4181,3 +4181,50 @@ body.is-vkb-open .acid-sky {
   display: flex;
   justify-content: flex-end;
 }
+
+/* Elementary Grade Preset Tabs & Core Tip */
+.dict-grade-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: var(--bg-surface);
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-card);
+}
+
+.dict-grade-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dict-grade-btn:hover {
+  background: var(--bg-muted);
+}
+
+.dict-grade-btn.is-active {
+  background: var(--mint);
+  color: #ffffff;
+}
+
+.dict-grade-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}

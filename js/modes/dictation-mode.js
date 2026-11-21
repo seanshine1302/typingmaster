@@ -99,6 +99,22 @@
     return dedupePureSentences([].concat(easy, medium, hard), lang);
   }
 
+  function getGradeMeta(gradeId) {
+    var grades = TypingApp.DATA_KO && Array.isArray(TypingApp.DATA_KO.dictationGrades)
+      ? TypingApp.DATA_KO.dictationGrades
+      : [];
+    for (var i = 0; i < grades.length; i++) {
+      if (grades[i].id === gradeId) return grades[i];
+    }
+    return null;
+  }
+
+  function buildPoolForGrade(gradeId) {
+    var meta = getGradeMeta(gradeId);
+    if (!meta || !Array.isArray(meta.sentences)) return [];
+    return dedupePureSentences(meta.sentences, 'ko');
+  }
+
   function loadLocalCustomSets() {
     try {
       var raw = global.localStorage ? global.localStorage.getItem(CUSTOM_SETS_STORAGE_KEY) : null;
@@ -299,6 +315,7 @@
     this.lang = app.getLanguage();
     this.sentenceCount = 5;
     this.level = 'all'; // 'all' | 'easy' | 'medium' | 'hard'
+    this.grade = null;  // 'g1' ~ 'g6' (Korean elementary presets)
 
     this.shuffleQueues = Object.create(null);
     this.customSets = loadLocalCustomSets()
@@ -416,6 +433,14 @@
         pool: customPool,
         queueKey: 'custom:' + this.activeCustomSet.id,
         count: Math.min(this.sentenceCount, customPool.length),
+      };
+    }
+    if (this.lang === 'ko' && this.grade) {
+      var gradePool = buildPoolForGrade(this.grade);
+      return {
+        pool: gradePool,
+        queueKey: 'grade:' + this.grade,
+        count: Math.min(this.sentenceCount, gradePool.length),
       };
     }
     var pool = buildPoolForLevel(this.lang, this.level);
@@ -951,7 +976,7 @@
     var activeLang = this.activeCustomSet ? this.activeCustomSet.lang : this.lang;
 
     var levelButtonsHtml = LEVEL_META.map(function (lv) {
-      var active = !this.activeCustomSet && this.level === lv.id;
+      var active = !this.activeCustomSet && !this.grade && this.level === lv.id;
       return (
         '<button type="button" class="dict-level-btn ' +
         (active ? 'is-active' : '') +
@@ -962,6 +987,23 @@
         '</button>'
       );
     }, this).join('');
+
+    var gradesList = this.lang === 'ko' && TypingApp.DATA_KO && Array.isArray(TypingApp.DATA_KO.dictationGrades)
+      ? TypingApp.DATA_KO.dictationGrades
+      : [];
+    var gradeButtonsHtml = gradesList.map(function (gr) {
+      var active = !this.activeCustomSet && this.grade === gr.id;
+      return (
+        '<button type="button" class="dict-grade-btn ' +
+        (active ? 'is-active' : '') +
+        '" data-grade="' +
+        escapeHtml(gr.id) +
+        '">' +
+        escapeHtml(gr.label) +
+        '</button>'
+      );
+    }, this).join('');
+    var activeGradeMeta = !this.activeCustomSet && this.lang === 'ko' && this.grade ? getGradeMeta(this.grade) : null;
 
     this.container.innerHTML =
       '<div class="practice-shell dictation-shell">' +
@@ -988,8 +1030,17 @@
         : '<div class="dict-level-group" role="group" aria-label="받아쓰기 난이도">' +
           '  <span class="dict-toolbar-label">난이도</span>' +
           levelButtonsHtml +
-          '</div>') +
+          '</div>' +
+          (gradeButtonsHtml
+            ? '<div class="dict-grade-group" role="group" aria-label="학년별 받아쓰기">' +
+              '  <span class="dict-toolbar-label">학년별 받아쓰기</span>' +
+              gradeButtonsHtml +
+              '</div>'
+            : '')) +
       '  </div>' +
+      (activeGradeMeta
+        ? '<div class="dict-grade-tip" role="note">💡 <strong>' + escapeHtml(activeGradeMeta.label) + '</strong> — ' + escapeHtml(activeGradeMeta.tip) + '</div>'
+        : '') +
       '  <section class="dict-card">' +
       '    <div class="dict-toolbar">' +
       '      <div class="dict-rate-group" role="group" aria-label="읽기 속도">' +
@@ -1075,7 +1126,17 @@
     Array.prototype.forEach.call(levelBtns, function (btn) {
       btn.addEventListener('click', function () {
         self.activeCustomSet = null;
+        self.grade = null;
         self.level = btn.dataset.level || 'all';
+        self._startNewSet();
+      });
+    });
+
+    var gradeBtns = this.container.querySelectorAll('.dict-grade-btn');
+    Array.prototype.forEach.call(gradeBtns, function (btn) {
+      btn.addEventListener('click', function () {
+        self.activeCustomSet = null;
+        self.grade = btn.dataset.grade || 'g1';
         self._startNewSet();
       });
     });

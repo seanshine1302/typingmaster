@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var SHELL_CACHE = 'typing-master-v13';
+  var SHELL_CACHE = 'typing-master-v14';
   var RUNTIME_CACHE = 'typing-master-runtime-v1';
 
   var PRECACHE_ASSETS = [
