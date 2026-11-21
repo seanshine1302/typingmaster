@@ -720,7 +720,7 @@
       '건';
 
     var self = this;
-    this.app.showResultModal({
+    this.app.showResult({
       mode: 'dictation',
       lang: activeLang,
       title: this.activeCustomSet ? '문제집 완료: ' + this.activeCustomSet.title : '받아쓰기 완료!',
