@@ -1,0 +1,192 @@
+(function (global) {
+  'use strict';
+
+  var TypingApp = (global.TypingApp = global.TypingApp || {});
+
+  TypingApp.DATA_EN = {
+    positionStages: [
+      {
+        id: 'home',
+        label: 'Home Row',
+        description: 'Build muscle memory on the resting middle keys (A S D F G H J K L).',
+        chars: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+      },
+      {
+        id: 'top',
+        label: 'Top Row',
+        description: 'Reach smoothly upward from the home row to Q W E R T Y U I O P.',
+        chars: ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+      },
+      {
+        id: 'bottom',
+        label: 'Bottom Row',
+        description: 'Curl your fingers downward cleanly to Z X C V B N M.',
+        chars: ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
+      },
+      {
+        id: 'shift',
+        label: 'Capitals (Shift)',
+        description: 'Hold the opposite-hand Shift pinky key while pressing each letter.',
+        chars: [
+          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+          'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+        ],
+      },
+      {
+        id: 'all',
+        label: 'All Keys',
+        description: 'Practice all lowercase and uppercase QWERTY letter keys together.',
+        chars: [
+          'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
+          'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
+          'z', 'x', 'c', 'v', 'b', 'n', 'm',
+          'A', 'S', 'D', 'F', 'J', 'K', 'L', 'Q', 'W', 'E', 'R', 'P', 'Z', 'M',
+        ],
+      },
+    ],
+
+    words: {
+      easy: [
+        'apple', 'cloud', 'river', 'stone', 'light', 'smile', 'water', 'earth', 'music', 'paper',
+        'chair', 'table', 'plant', 'green', 'clear', 'smart', 'quick', 'frame', 'brush', 'bread',
+        'glass', 'train', 'ocean', 'beach', 'field', 'trail', 'spark', 'focus', 'learn', 'write',
+        'clock', 'watch', 'dream', 'peace', 'voice', 'story', 'night', 'sunny', 'fresh', 'clean',
+        'house', 'grain', 'berry', 'lemon', 'honey', 'maple', 'storm', 'breeze', 'sound', 'world',
+      ],
+      medium: [
+        'morning', 'journey', 'library', 'keyboard', 'balance', 'capture', 'horizon', 'lantern', 'network', 'pattern',
+        'quality', 'reading', 'science', 'thought', 'venture', 'weather', 'digital', 'explore', 'freedom', 'gravity',
+        'harmony', 'imagine', 'justice', 'kindness', 'measure', 'natural', 'observe', 'picture', 'silence', 'teacher',
+        'browser', 'package', 'compass', 'crystal', 'diamond', 'gallery', 'harvest', 'journal', 'station', 'rainbow',
+        'comfort', 'project', 'surface', 'whisper', 'builder', 'victory', 'mystery', 'message', 'routine', 'feature',
+      ],
+      hard: [
+        'algorithm', 'architecture', 'calibration', 'comfortable', 'concentrate', 'consistency', 'creativity', 'development',
+        'environment', 'experience', 'foundation', 'imagination', 'improvement', 'information', 'inspiration', 'interactive',
+        'knowledge', 'maintenance', 'navigation', 'observation', 'opportunity', 'performance', 'perspective', 'photography',
+        'practical', 'precision', 'preparation', 'programming', 'reliability', 'responsibility', 'simplicity', 'spreadsheet',
+        'sustainable', 'technology', 'temperature', 'understanding', 'vocabulary', 'workspace', 'excellence', 'efficiency',
+      ],
+    },
+
+    shortSentences: [
+      'The quick brown fox jumps over the lazy dog near the quiet river.',
+      'Pack my box with five dozen liquor jugs before the morning train leaves.',
+      'Sphinx of black quartz, judge my vow under the clear starlight.',
+      'Good posture and relaxed wrists help you type comfortably for hours.',
+      'Accuracy always comes before speed when building strong typing habits.',
+      'Sunlight streamed through the tall window onto the clean wooden desk.',
+      'Practice for ten focused minutes each day to see steady improvement.',
+      'Always use the opposite pinky finger to hold the Shift key.',
+      'Fresh mountain air and birdsong made the early walk unforgettable.',
+      'Every complex project starts with one small and thoughtful step.',
+      'Clean typography and calm colors make reading on screens effortless.',
+      'She opened her notebook and sketched a map of the coastal trail.',
+      'Listening carefully often reveals details that speed would miss.',
+      'A reliable keyboard feels like an extension of your own thoughts.',
+      'Warm tea on a rainy afternoon brings a welcome sense of calm.',
+      'Keep your eyes on the screen and trust your fingers to find each key.',
+      'Small daily improvements grow into remarkable skills over time.',
+      'The museum gallery featured watercolor paintings of autumn forests.',
+      'Writing clearly helps other people understand your ideas right away.',
+      'Steady rhythm matters far more than rushing through a single line.',
+      'Gentle waves rolled across the silver sand beneath a pastel sky.',
+      'Check your finger placement on F and J whenever you lose track.',
+      'Curiosity turns ordinary routines into opportunities to learn.',
+      'Cool evening breezes carried the scent of pine through the valley.',
+      'Organize your workspace before starting so your mind stays clear.',
+      'Learning new shortcuts saves valuable time during busy workdays.',
+      'Bright lanterns lined the narrow street beside the old bookshop.',
+      'Patient effort builds confidence that lasts far longer than luck.',
+      'Digital tools shine brightest when they support human creativity.',
+      'Read each sentence ahead as your hands finish typing the current word.',
+      'Green leaves shimmered after the brief summer shower passed by.',
+      'True mastery looks effortless because the fundamentals are solid.',
+      'Take a brief break every half hour to stretch your hands and shoulders.',
+      'Well-written software balances speed, clarity, and thoughtful design.',
+      'Stars emerged one by one above the dark silhouette of the hills.',
+      'Focus on smooth transitions between keys rather than forceful taps.',
+      'A tidy desk encourages calm thinking and deeper concentration.',
+      'Music without lyrics can create a peaceful backdrop for study.',
+      'Celebrate progress even when the path forward feels gradual.',
+      'Clear communication bridges gaps between teams across the world.',
+      'The library clock chimed softly as students turned another page.',
+      'Confidence grows naturally when preparation meets steady practice.',
+    ],
+
+    longPassages: [
+      {
+        id: 'en-1',
+        title: 'The Art of Touch Typing',
+        category: 'Skills',
+        lines: [
+          'Touch typing allows your thoughts to flow straight onto the screen without interruption.',
+          'When you stop looking down at the keyboard, your eyes stay focused on meaning and structure.',
+          'Rest your index fingers gently on the raised bumps of F and J to anchor both hands.',
+          'Hold the Shift key with the opposite pinky finger whenever you need a capital letter.',
+          'With patient daily practice, accuracy becomes automatic and speed follows naturally.',
+        ],
+      },
+      {
+        id: 'en-2',
+        title: 'A Quiet Morning by the Lake',
+        category: 'Nature',
+        lines: [
+          'Early mist hovered softly above the surface of the lake before sunrise.',
+          'Pine trees along the shore stood still as a gentle breeze rippled across the water.',
+          'A wooden dock stretched into the calm cove where two small boats were moored.',
+          'As golden light warmed the eastern ridge, birds began calling from the canopy.',
+          'Moments like this remind us how restorative a few quiet minutes outdoors can be.',
+        ],
+      },
+      {
+        id: 'en-3',
+        title: 'Principles of Calm Design',
+        category: 'Design',
+        lines: [
+          'Great interfaces rarely shout for attention; instead, they guide the eye gracefully.',
+          'Soft off-white backgrounds reduce glare and keep text comfortable to read over time.',
+          'Consistent spacing and clear visual hierarchy help people understand tools instantly.',
+          'Subtle color accents highlight what matters most without overwhelming the senses.',
+          'When friction fades away, users can devote their full energy to creative work.',
+        ],
+      },
+      {
+        id: 'en-4',
+        title: 'Building Habits That Last',
+        category: 'Productivity',
+        lines: [
+          'Ambitious goals often feel daunting until we break them into manageable daily actions.',
+          'Showing up for a short session every morning beats an exhausting marathon once a month.',
+          'Track your accuracy alongside your speed so growth stays balanced and sustainable.',
+          'Whenever mistakes happen, slow down briefly to reset your rhythm and posture.',
+          'Over weeks and months, tiny consistent gains compound into lasting skill.',
+        ],
+      },
+      {
+        id: 'en-5',
+        title: 'How Keyboards Shaped Computing',
+        category: 'Technology',
+        lines: [
+          'The QWERTY layout dates back to nineteenth-century mechanical typewriters.',
+          'Although early machines needed spacing to prevent metal arms from jamming together,',
+          'modern digital keyboards inherited the layout and made it a universal standard.',
+          'Today, programmers, writers, and students rely on tactile feedback every single day.',
+          'Understanding the layout deeply unlocks faster editing, coding, and communication.',
+        ],
+      },
+      {
+        id: 'en-6',
+        title: 'Curiosity and Lifelong Learning',
+        category: 'Essay',
+        lines: [
+          'Learning does not end when a class finishes or a textbook closes for the season.',
+          'Every new skill begins with awkward first attempts and gradual moments of clarity.',
+          'Asking thoughtful questions turns unfamiliar subjects into exciting territory.',
+          'Share what you discover with others, because teaching reinforces what you know.',
+          'Stay curious, stay patient, and enjoy the steady craft of getting a little better each day.',
+        ],
+      },
+    ],
+  };
+})(window);

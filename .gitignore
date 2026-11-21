@@ -1,0 +1,30 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# Editors & IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs & temporary files
+*.log
+*.tmp
+*.bak
+tmp/
+temp/
+
+# Local tools & environments
+node_modules/
+.vercel/
+.env
+.env.*
+__pycache__/
+*.pyc
+
+# Exported user backup JSON files
+*-backup-*.json
