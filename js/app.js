@@ -365,6 +365,49 @@
     }
   };
 
+  var GRADE_RECOMMENDATIONS = {
+    1: {
+      primaryMode: 'position',
+      primaryLabel: '자리 연습 시작하기',
+      secondaryMode: 'word',
+      secondaryLabel: '낱말 연습 도전',
+      descKo: '초보자 추천: 자리 연습으로 손가락 위치를 익히고 낱말 연습으로 기본 타자 감각을 잡아보세요.',
+      descEn: '초보자 추천: 영문 QWERTY 자리 연습으로 손가락 위치를 익히고 낱말 연습을 시작해 보세요.',
+    },
+    2: {
+      primaryMode: 'word',
+      primaryLabel: '낱말 연습 이어하기',
+      secondaryMode: 'short',
+      secondaryLabel: '단문장 연습 도전',
+      descKo: '입문자 추천: 다양한 낱말 연습으로 타자 속도를 높이고 단문장 입력에 도전해 보세요.',
+      descEn: '입문자 추천: 영문 낱말 연습으로 타자 속도를 높이고 단문장 입력에 도전해 보세요.',
+    },
+    3: {
+      primaryMode: 'short',
+      primaryLabel: '단문장 연습 이어하기',
+      secondaryMode: 'acid',
+      secondaryLabel: '산성비 게임 도전',
+      descKo: '숙련자 추천: 단문장 연습으로 문장 호흡과 정확도를 다지고 산성비 게임으로 순발력을 키워보세요.',
+      descEn: '숙련자 추천: 영문 단문장 연습으로 문장 호흡과 정확도를 다지고 산성비 게임에 도전해 보세요.',
+    },
+    4: {
+      primaryMode: 'long',
+      primaryLabel: '장문장 연습 도전',
+      secondaryMode: 'acid',
+      secondaryLabel: '산성비 고난도 도전',
+      descKo: '전문가 추천: 장문장 지문을 안정적으로 완주하고 산성비 상위 단계로 마스터 등급에 도전해 보세요.',
+      descEn: '전문가 추천: 영문 장문장 지문을 안정적으로 완주하고 산성비 상위 단계로 마스터 등급에 도전해 보세요.',
+    },
+    5: {
+      primaryMode: 'long',
+      primaryLabel: '장문장 마스터 연습',
+      secondaryMode: 'acid',
+      secondaryLabel: '산성비 10단계 도전',
+      descKo: '마스터 추천: 장문장 최고 타수 경신과 산성비 10단계 완주에 도전해 보세요.',
+      descEn: '마스터 추천: 영문 장문장 최고 타수 경신과 산성비 10단계 완주에 도전해 보세요.',
+    },
+  };
+
   AppController.prototype._renderHome = function () {
     var self = this;
     var isKo = self.lang === 'ko';
@@ -375,6 +418,7 @@
       ? TypingApp.ProfileStore.getOverallSummary(activeUser)
       : { totalSessions: 0, totalCombinedSessions: 0, overallAvgAccuracy: 0, bestCpm: 0, totalAcidGames: 0, bestAcidScore: 0, grade: { tier: 1, label: '초보자' } };
     var activeGrade = summary.grade || { tier: 1, label: '초보자' };
+    var tierRec = GRADE_RECOMMENDATIONS[activeGrade.tier] || GRADE_RECOMMENDATIONS[1];
     var acidCurrent = activeUser && activeUser.acidRain ? activeUser.acidRain[self.lang] : { highScore: 0 };
 
     self.mainEl.innerHTML = '';
@@ -398,13 +442,11 @@
       (activeUser ? escapeHtml(activeUser.name) + '님, ' : '') +
       '편안하고 정확한 타자 연습을 시작해 보세요</h1>' +
       '  <p class="home-hero-desc">' +
-      (isKo
-        ? '기초 자리 연습부터 낱말·단문장·장문장 연습, 그리고 10단계 산성비 미니게임까지 한곳에서 즐길 수 있습니다. 연습 기록과 등급은 사용자별로 자동 저장됩니다.'
-        : '영문 QWERTY 자판 자리 연습, 낱말·단문장·장문장 연습, 그리고 10단계 산성비 게임을 바로 시작할 수 있습니다. 연습 기록과 등급은 사용자별로 자동 저장됩니다.') +
+      escapeHtml(isKo ? tierRec.descKo : tierRec.descEn) +
       '  </p>' +
       '  <div class="home-hero-actions">' +
-      '    <button type="button" class="btn btn-primary btn-lg" data-start-mode="position">자리 연습 시작하기</button>' +
-      '    <button type="button" class="btn btn-mint btn-lg" data-start-mode="acid">산성비 게임 도전</button>' +
+      '    <button type="button" class="btn btn-primary btn-lg" data-start-mode="' + tierRec.primaryMode + '">' + escapeHtml(tierRec.primaryLabel) + '</button>' +
+      '    <button type="button" class="btn btn-mint btn-lg" data-start-mode="' + tierRec.secondaryMode + '">' + escapeHtml(tierRec.secondaryLabel) + '</button>' +
       '    <button type="button" class="btn btn-ghost btn-lg" id="home-records-btn">내 기록</button>' +
       '    <button type="button" class="btn btn-ghost btn-lg" id="home-dashboard-btn">전체 현황</button>' +
       '  </div>' +
