@@ -4,6 +4,7 @@
   var TypingApp = (global.TypingApp = global.TypingApp || {});
 
   var STORAGE_KEY = 'typingmaster_profiles_v1';
+  var ACTIVE_USER_KEY = 'typingmaster_active_user_id_v1';
   var PRACTICE_MODES = ['position', 'word', 'short', 'long'];
   var MAX_HISTORY = 50;
 
@@ -265,27 +266,246 @@
     }
   }
 
+  function readSavedActiveUserId() {
+    try {
+      if (global.localStorage) {
+        return global.localStorage.getItem(ACTIVE_USER_KEY) || '';
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+    return '';
+  }
+
+  function writeSavedActiveUserId(userId) {
+    try {
+      if (global.localStorage && userId) {
+        global.localStorage.setItem(ACTIVE_USER_KEY, String(userId));
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
   function loadState() {
     var raw = readStorageRaw();
     if (raw) {
       try {
         var parsed = JSON.parse(raw);
         var normalized = normalizeState(parsed);
-        if (normalized) return normalized;
+        if (normalized) {
+          var savedId = readSavedActiveUserId();
+          if (savedId && normalized.users.some(function (u) { return u.id === savedId; })) {
+            normalized.activeUserId = savedId;
+          } else {
+            writeSavedActiveUserId(normalized.activeUserId);
+          }
+          return normalized;
+        }
       } catch (e) {
         // Ignore corrupt JSON and recreate default state
       }
     }
     var fresh = createDefaultState();
-    saveState(fresh);
+    var existingSavedId = readSavedActiveUserId();
+    writeStorageRaw(JSON.stringify(fresh));
+    if (!existingSavedId) {
+      writeSavedActiveUserId(fresh.activeUserId);
+    }
     return fresh;
   }
 
   function saveState(stateObj) {
+    if (stateObj && stateObj.activeUserId) {
+      writeSavedActiveUserId(stateObj.activeUserId);
+    }
     writeStorageRaw(JSON.stringify(stateObj));
   }
 
   var state = loadState();
+  var listeners = [];
+  var remoteBridge = null;
+  var unsubscribeRemote = null;
+  var initialSyncDone = false;
+
+  function notifyListeners(reason) {
+    var snapshot = {
+      reason: reason || 'update',
+      activeUser: clone(getActiveUserRef()),
+      users: clone(state.users),
+    };
+    listeners.slice().forEach(function (fn) {
+      try {
+        fn(snapshot);
+      } catch (err) {
+        console.warn('[ProfileStore] listener error:', err);
+      }
+    });
+  }
+
+  function getUserTotalCount(userObj) {
+    if (!userObj) return 0;
+    var total = 0;
+    PRACTICE_MODES.forEach(function (mode) {
+      if (userObj.practice && userObj.practice[mode]) {
+        total += Number(userObj.practice[mode].sessions) || 0;
+      }
+    });
+    if (userObj.acidRain) {
+      total += Number(userObj.acidRain.ko && userObj.acidRain.ko.gamesPlayed) || 0;
+      total += Number(userObj.acidRain.en && userObj.acidRain.en.gamesPlayed) || 0;
+    }
+    return total;
+  }
+
+  function hasMeaningfulLocalData(userObj) {
+    if (!userObj) return false;
+    return (
+      getUserTotalCount(userObj) > 0 ||
+      userObj.id !== 'usr_default' ||
+      userObj.name !== '기본 사용자'
+    );
+  }
+
+  function sortUsersStably(users) {
+    return users.slice().sort(function (a, b) {
+      if (a.id === 'usr_default' && b.id !== 'usr_default') return -1;
+      if (b.id === 'usr_default' && a.id !== 'usr_default') return 1;
+      var ta = Date.parse(a.createdAt || '') || 0;
+      var tb = Date.parse(b.createdAt || '') || 0;
+      if (ta !== tb) return ta - tb;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }
+
+  function resolveActiveUserId(users) {
+    var preferredId = readSavedActiveUserId() || state.activeUserId;
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].id === preferredId) {
+        return preferredId;
+      }
+    }
+    return users[0].id;
+  }
+
+  function applyRemoteUsers(rawRemoteList, reason) {
+    var normalizedList = [];
+    (rawRemoteList || []).forEach(function (item) {
+      var u = normalizeUser(item);
+      if (u) normalizedList.push(u);
+    });
+
+    if (!normalizedList.length) {
+      return false;
+    }
+
+    var sorted = sortUsersStably(normalizedList);
+    state.users = sorted;
+    state.activeUserId = resolveActiveUserId(sorted);
+    saveState(state);
+    notifyListeners(reason || 'remote');
+    return true;
+  }
+
+  function pushUserToRemote(userObj) {
+    if (!remoteBridge || typeof remoteBridge.upsertUser !== 'function' || !userObj) return;
+    remoteBridge.upsertUser(clone(userObj)).catch(function (err) {
+      console.warn('[ProfileStore] Firestore 저장 대기/오프라인 fallback:', err && err.message ? err.message : err);
+    });
+  }
+
+  function deleteUserFromRemote(userId) {
+    if (!remoteBridge || typeof remoteBridge.deleteUser !== 'function' || !userId) return;
+    remoteBridge.deleteUser(userId).catch(function (err) {
+      console.warn('[ProfileStore] Firestore 삭제 실패:', err && err.message ? err.message : err);
+    });
+  }
+
+  function replaceAllRemoteUsers(users, previousIds) {
+    if (!remoteBridge || typeof remoteBridge.replaceAllUsers !== 'function') return;
+    remoteBridge.replaceAllUsers(clone(users), previousIds || []).catch(function (err) {
+      console.warn('[ProfileStore] Firestore 전체 복원 동기화 실패:', err && err.message ? err.message : err);
+    });
+  }
+
+  function attachRemoteBridge(bridge) {
+    if (!bridge || !bridge.ready) return;
+    remoteBridge = bridge;
+
+    if (typeof unsubscribeRemote === 'function') {
+      unsubscribeRemote();
+      unsubscribeRemote = null;
+    }
+
+    var localUsersSnapshot = clone(state.users);
+
+    bridge.fetchAllUsers().then(function (rawRemote) {
+      var remoteUsers = [];
+      (rawRemote || []).forEach(function (item) {
+        var u = normalizeUser(item);
+        if (u) remoteUsers.push(u);
+      });
+
+      var toUpload = [];
+      if (remoteUsers.length === 0) {
+        // First-time migration: upload all existing localStorage users to Firestore
+        toUpload = localUsersSnapshot;
+        remoteUsers = localUsersSnapshot;
+      } else {
+        var remoteById = {};
+        remoteUsers.forEach(function (u) {
+          remoteById[u.id] = u;
+        });
+
+        localUsersSnapshot.forEach(function (localUser) {
+          var existingRemote = remoteById[localUser.id];
+          if (!existingRemote) {
+            if (hasMeaningfulLocalData(localUser)) {
+              toUpload.push(localUser);
+              remoteUsers.push(localUser);
+              remoteById[localUser.id] = localUser;
+            }
+          } else if (getUserTotalCount(existingRemote) === 0 && getUserTotalCount(localUser) > 0) {
+            toUpload.push(localUser);
+            remoteById[localUser.id] = localUser;
+            for (var k = 0; k < remoteUsers.length; k++) {
+              if (remoteUsers[k].id === localUser.id) {
+                remoteUsers[k] = localUser;
+                break;
+              }
+            }
+          }
+        });
+      }
+
+      applyRemoteUsers(remoteUsers, 'initial-sync');
+      initialSyncDone = true;
+
+      if (toUpload.length > 0) {
+        Promise.all(toUpload.map(function (u) {
+          return bridge.upsertUser(u);
+        })).catch(function (err) {
+          console.warn('[ProfileStore] 기존 기록 마이그레이션 중 일부 지연:', err);
+        });
+      }
+
+      if (typeof bridge.subscribeUsers === 'function') {
+        unsubscribeRemote = bridge.subscribeUsers(
+          function (liveList, metadata) {
+            if (!initialSyncDone) return;
+            if (metadata && metadata.hasPendingWrites) return;
+            if (!liveList || liveList.length === 0) return;
+            applyRemoteUsers(liveList, 'realtime');
+          },
+          function (err) {
+            console.warn('[ProfileStore] Firestore 실시간 구독 오류(로컬 캐시 유지):', err && err.message ? err.message : err);
+          }
+        );
+      }
+    }).catch(function (err) {
+      console.warn('[ProfileStore] Firestore 초기 동기화 실패(오프라인 캐시 사용):', err && err.message ? err.message : err);
+    });
+  }
 
   function getActiveUserRef() {
     for (var i = 0; i < state.users.length; i++) {
@@ -329,6 +549,7 @@
     state.users.push(user);
     state.activeUserId = user.id;
     saveState(state);
+    pushUserToRemote(user);
 
     return { ok: true, user: clone(user) };
   }
@@ -365,6 +586,7 @@
       state.activeUserId = state.users[0].id;
     }
     saveState(state);
+    deleteUserFromRemote(userId);
 
     return { ok: true, activeUser: clone(getActiveUserRef()) };
   }
@@ -374,6 +596,7 @@
     var active = getActiveUserRef();
     active.settings.lang = normalized;
     saveState(state);
+    pushUserToRemote(active);
     return normalized;
   }
 
@@ -438,6 +661,7 @@
     }
 
     saveState(state);
+    pushUserToRemote(active);
     var newGrade = calculateUserGrade(active);
     var gradeUp = newGrade.tier > prevGrade.tier ? { from: prevGrade, to: newGrade } : null;
 
@@ -489,6 +713,7 @@
     }
 
     saveState(state);
+    pushUserToRemote(active);
     var newGrade = calculateUserGrade(active);
     var gradeUp = newGrade.tier > prevGrade.tier ? { from: prevGrade, to: newGrade } : null;
 
@@ -662,13 +887,26 @@
       return { ok: false, error: '션샤인타자연습 사용자 기록 형식을 찾을 수 없습니다.' };
     }
 
+    var previousIds = state.users.map(function (u) { return u.id; });
     state = normalized;
     saveState(state);
+    replaceAllRemoteUsers(state.users, previousIds);
 
     return {
       ok: true,
       userCount: state.users.length,
       activeUser: clone(getActiveUserRef()),
+    };
+  }
+
+  function subscribe(listener) {
+    if (typeof listener !== 'function') {
+      return function () {};
+    }
+    listeners.push(listener);
+    return function () {
+      var idx = listeners.indexOf(listener);
+      if (idx !== -1) listeners.splice(idx, 1);
     };
   }
 
@@ -688,9 +926,15 @@
     getGradeProgress: getGradeProgress,
     exportAllData: exportAllData,
     importAllData: importAllData,
+    subscribe: subscribe,
+    attachRemoteBridge: attachRemoteBridge,
     reload: function () {
       state = loadState();
       return getActiveUser();
     },
   };
+
+  if (TypingApp.FirebaseBridge && TypingApp.FirebaseBridge.ready) {
+    attachRemoteBridge(TypingApp.FirebaseBridge);
+  }
 })(window);

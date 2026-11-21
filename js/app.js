@@ -87,8 +87,33 @@
     this._initDashboardModal();
     this._bindHeader();
     this._updateHeaderState();
+    this._bindRemoteProfileSync();
     this.navigate('home');
   }
+
+  AppController.prototype._bindRemoteProfileSync = function () {
+    var self = this;
+    if (!TypingApp.ProfileStore || typeof TypingApp.ProfileStore.subscribe !== 'function') return;
+
+    TypingApp.ProfileStore.subscribe(function (event) {
+      var activeUser = event && event.activeUser ? event.activeUser : self.getActiveUser();
+      if (activeUser && activeUser.settings && self.currentMode === 'home') {
+        self.lang = activeUser.settings.lang === 'en' ? 'en' : 'ko';
+      }
+
+      self._updateHeaderState();
+
+      if (self.currentMode === 'home') {
+        self._renderHome();
+      }
+      if (self.profileModal && self.profileModal.isOpen()) {
+        self.profileModal.render();
+      }
+      if (self.dashboardModal && self.dashboardModal.isOpen()) {
+        self.dashboardModal.render();
+      }
+    });
+  };
 
   AppController.prototype._initProfileModal = function () {
     var self = this;

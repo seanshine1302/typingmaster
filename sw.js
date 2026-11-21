@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var SHELL_CACHE = 'typing-master-v9';
+  var SHELL_CACHE = 'typing-master-v10';
   var RUNTIME_CACHE = 'typing-master-runtime-v1';
 
   var PRECACHE_ASSETS = [
@@ -15,6 +15,7 @@
     './js/ime-evaluator.js',
     './js/mobile-viewport.js',
     './js/profile-store.js',
+    './js/firebase-sync.js',
     './js/components/keyboard-view.js',
     './js/components/profile-modal.js',
     './js/components/dashboard-modal.js',
@@ -58,6 +59,13 @@
     if (req.method !== 'GET') return;
 
     var url = new URL(req.url);
+    if (
+      url.hostname.endsWith('googleapis.com') ||
+      url.hostname.endsWith('firebaseio.com') ||
+      url.hostname.endsWith('firebaseapp.com')
+    ) {
+      return;
+    }
     var isSameOrigin = url.origin === self.location.origin;
 
     if (isSameOrigin) {
