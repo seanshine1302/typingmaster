@@ -23,15 +23,15 @@
 
   var LEVEL_SPECS = [
     null,
-    { fallSpeed: 22, spawnInterval: 4200, maxWords: 5 },
-    { fallSpeed: 29, spawnInterval: 3650, maxWords: 6 },
-    { fallSpeed: 38, spawnInterval: 3150, maxWords: 7 },
-    { fallSpeed: 48, spawnInterval: 2650, maxWords: 8 },
-    { fallSpeed: 60, spawnInterval: 2200, maxWords: 9 },
-    { fallSpeed: 73, spawnInterval: 1800, maxWords: 11 },
-    { fallSpeed: 88, spawnInterval: 1450, maxWords: 12 },
-    { fallSpeed: 104, spawnInterval: 1150, maxWords: 14 },
-    { fallSpeed: 121, spawnInterval: 880, maxWords: 15 },
+    { fallSpeed: 11, spawnInterval: 4500, maxWords: 4 },
+    { fallSpeed: 17, spawnInterval: 3950, maxWords: 5 },
+    { fallSpeed: 25, spawnInterval: 3400, maxWords: 6 },
+    { fallSpeed: 35, spawnInterval: 2900, maxWords: 8 },
+    { fallSpeed: 47, spawnInterval: 2400, maxWords: 9 },
+    { fallSpeed: 61, spawnInterval: 1950, maxWords: 11 },
+    { fallSpeed: 77, spawnInterval: 1550, maxWords: 12 },
+    { fallSpeed: 95, spawnInterval: 1200, maxWords: 14 },
+    { fallSpeed: 115, spawnInterval: 900, maxWords: 15 },
     { fallSpeed: 138, spawnInterval: 650, maxWords: 16 },
   ];
 
