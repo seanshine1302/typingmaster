@@ -886,7 +886,7 @@
     var candidate = parsed && parsed.data ? parsed.data : parsed;
     var normalized = normalizeState(candidate);
     if (!normalized) {
-      return { ok: false, error: '션샤인타자연습 사용자 기록 형식을 찾을 수 없습니다.' };
+      return { ok: false, error: '최선우 타자연습 사용자 기록 형식을 찾을 수 없습니다.' };
     }
 
     var previousIds = state.users.map(function (u) { return u.id; });
